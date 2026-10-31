@@ -1,0 +1,456 @@
+-- ========================================================
+-- NovaClient: Glassmorphism iOS Edition v20 (Ultimate DLC)
+-- ========================================================
+
+local Workspace = game:GetService("Workspace")
+local Players = game:GetService("Players")
+local CoreGui = game:GetService("CoreGui")
+local TweenService = game:GetService("TweenService")
+local Lighting = game:GetService("Lighting")
+local RunService = game:GetService("RunService")
+
+local LocalPlayer = Players.LocalPlayer
+
+-- Очистка старых версий GUI
+if CoreGui:FindFirstChild("NovaGlassGui") then
+    CoreGui.NovaGlassGui:Destroy()
+end
+
+-- ==================== [ ЭФФЕКТ РАЗМЫТИЯ МИРА / BLUR ] ====================
+local BlurEffect = Lighting:FindFirstChild("NovaGlassBlur")
+if not BlurEffect then
+    BlurEffect = Instance.new("DepthOfFieldEffect")
+    BlurEffect.Name = "NovaGlassBlur"
+    BlurEffect.FarIntensity = 0
+    BlurEffect.FocusDistance = 0
+    BlurEffect.InFocusRadius = 0
+    BlurEffect.NearIntensity = 0
+    BlurEffect.Parent = Lighting
+end
+
+-- ==================== [ ИНТЕРФЕЙС / GUI ] ====================
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "NovaGlassGui"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = CoreGui
+
+-- iOS Home Bar (Длинная, тонкая и аккуратная снизу, как на фото 3)
+local HomeBar = Instance.new("Frame")
+HomeBar.Name = "iOSHomeBar"
+HomeBar.Size = UDim2.new(0, 160, 0, 4)
+HomeBar.Position = UDim2.new(0.5, -80, 0.97, 0)
+HomeBar.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+HomeBar.BackgroundTransparency = 0.25
+HomeBar.BorderSizePixel = 0
+HomeBar.Active = true
+HomeBar.Parent = ScreenGui
+
+local HomeBarCorner = Instance.new("UICorner") HomeBarCorner.CornerRadius = UDim.new(1, 0) HomeBarCorner.Parent = HomeBar
+
+local HomeBarBtn = Instance.new("TextButton")
+HomeBarBtn.Size = UDim2.new(1, 40, 1, 25)
+HomeBarBtn.Position = UDim2.new(0, -20, 0, -10)
+HomeBarBtn.BackgroundTransparency = 1
+HomeBarBtn.Text = ""
+HomeBarBtn.Parent = HomeBar
+
+-- Главное меню (Широкое, комфортное, выше плашки)
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 360, 0, 310)
+MainFrame.Position = UDim2.new(0.5, -180, 1.4, 0)
+MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 24)
+MainFrame.BackgroundTransparency = 0.20
+MainFrame.BorderSizePixel = 0
+MainFrame.ClipsDescendants = true
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
+
+local FrameCorner = Instance.new("UICorner") FrameCorner.CornerRadius = UDim.new(0, 26) FrameCorner.Parent = MainFrame
+local FrameStroke = Instance.new("UIStroke") FrameStroke.Color = Color3.fromRGB(255, 255, 255) FrameStroke.Transparency = 0.60 FrameStroke.Thickness = 1.5 FrameStroke.Parent = MainFrame
+
+-- Внутренний мощный слой матового стекла (Glassmorphism Blur внутри)
+local InnerGlass = Instance.new("Frame")
+InnerGlass.Size = UDim2.new(1, 0, 1, 0)
+InnerGlass.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+InnerGlass.BackgroundTransparency = 0.88
+InnerGlass.BorderSizePixel = 0
+InnerGlass.ZIndex = 0
+InnerGlass.Parent = MainFrame
+local IGCorner = Instance.new("UICorner") IGCorner.CornerRadius = UDim.new(0, 26) IGCorner.Parent = InnerGlass
+
+-- Дополнительный текстурный градиент для глубокого эффекта размытого стекла изнутри
+local InnerGradient = Instance.new("UIGradient")
+InnerGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(240, 240, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(150, 150, 180))
+})
+InnerGradient.Transparency = NumberSequence.new({
+    NumberSequenceKeypoint.new(0, 0.15),
+    NumberSequenceKeypoint.new(1, 0.65)
+})
+InnerGradient.Rotation = 45
+InnerGradient.Parent = InnerGlass
+
+-- Логотип пользователя (ID: 72797321120382)
+local LogoImg = Instance.new("ImageLabel")
+LogoImg.Size = UDim2.new(0, 28, 0, 28)
+LogoImg.Position = UDim2.new(0, 20, 0, 18)
+LogoImg.BackgroundTransparency = 1
+LogoImg.Image = "rbxassetid://72797321120382"
+LogoImg.ZIndex = 2
+LogoImg.Parent = MainFrame
+local LogoCorner = Instance.new("UICorner") LogoCorner.CornerRadius = UDim.new(1, 0) LogoCorner.Parent = LogoImg
+
+-- Заголовок
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, -65, 0, 26)
+Title.Position = UDim2.new(0, 56, 0, 17)
+Title.BackgroundTransparency = 1
+Title.ZIndex = 2
+Title.Text = "Nova Client"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 18
+Title.Font = Enum.Font.GothamBold
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = MainFrame
+
+local SubTitle = Instance.new("TextLabel")
+SubTitle.Size = UDim2.new(1, -65, 0, 16)
+SubTitle.Position = UDim2.new(0, 56, 0, 42)
+SubTitle.BackgroundTransparency = 1
+SubTitle.ZIndex = 2
+SubTitle.Text = "System DLC 1.0.0"
+SubTitle.TextColor3 = Color3.fromRGB(180, 180, 195)
+SubTitle.TextSize = 11
+SubTitle.Font = Enum.Font.Gotham
+SubTitle.TextXAlignment = Enum.TextXAlignment.Left
+SubTitle.Parent = MainFrame
+
+-- ==================== [ КНОПКА 1: BARRIER BYPASS ] ====================
+local BypassBtn = Instance.new("TextButton")
+BypassBtn.Size = UDim2.new(1, -40, 0, 42)
+BypassBtn.Position = UDim2.new(0, 20, 0, 75)
+BypassBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+BypassBtn.BackgroundTransparency = 0.85
+BypassBtn.ZIndex = 2
+BypassBtn.Text = "   Barrier Bypass  ↗"
+BypassBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+BypassBtn.TextSize = 13
+BypassBtn.Font = Enum.Font.GothamMedium
+BypassBtn.TextXAlignment = Enum.TextXAlignment.Left
+BypassBtn.Parent = MainFrame
+
+local BBtnCorner = Instance.new("UICorner") BBtnCorner.CornerRadius = UDim.new(0, 14) BBtnCorner.Parent = BypassBtn
+local BBtnStroke = Instance.new("UIStroke") BBtnStroke.Color = Color3.fromRGB(255, 255, 255) BBtnStroke.Transparency = 0.80 BBtnStroke.Thickness = 1 BBtnStroke.Parent = BypassBtn
+
+local StatusDot1 = Instance.new("Frame")
+StatusDot1.Size = UDim2.new(0, 8, 0, 8)
+StatusDot1.Position = UDim2.new(1, -22, 0.5, -4)
+StatusDot1.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
+StatusDot1.BorderSizePixel = 0
+StatusDot1.ZIndex = 2
+StatusDot1.Parent = BypassBtn
+local DotCor1 = Instance.new("UICorner") DotCor1.CornerRadius = UDim.new(1, 0) DotCor1.Parent = StatusDot1
+
+-- ==================== [ КНОПКА 2: HEADSIT ] ====================
+local HeadsitBtn = Instance.new("TextButton")
+HeadsitBtn.Size = UDim2.new(1, -82, 0, 42)
+HeadsitBtn.Position = UDim2.new(0, 20, 0, 124)
+HeadsitBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+HeadsitBtn.BackgroundTransparency = 0.85
+HeadsitBtn.ZIndex = 2
+HeadsitBtn.Text = "   Headsit: None"
+HeadsitBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+HeadsitBtn.TextSize = 12
+HeadsitBtn.Font = Enum.Font.GothamMedium
+HeadsitBtn.TextXAlignment = Enum.TextXAlignment.Left
+HeadsitBtn.Parent = MainFrame
+
+local HBtnCorner = Instance.new("UICorner") HBtnCorner.CornerRadius = UDim.new(0, 14) HBtnCorner.Parent = HeadsitBtn
+local HBtnStroke = Instance.new("UIStroke") HBtnStroke.Color = Color3.fromRGB(255, 255, 255) HBtnStroke.Transparency = 0.80 HBtnStroke.Thickness = 1 HBtnStroke.Parent = HeadsitBtn
+
+local StatusDot2 = Instance.new("Frame")
+StatusDot2.Size = UDim2.new(0, 8, 0, 8)
+StatusDot2.Position = UDim2.new(1, -22, 0.5, -4)
+StatusDot2.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
+StatusDot2.BorderSizePixel = 0
+StatusDot2.ZIndex = 2
+StatusDot2.Parent = HeadsitBtn
+local DotCor2 = Instance.new("UICorner") DotCor2.CornerRadius = UDim.new(1, 0) DotCor2.Parent = StatusDot2
+
+local SelectToggleBtn = Instance.new("TextButton")
+SelectToggleBtn.Size = UDim2.new(0, 40, 0, 42)
+SelectToggleBtn.Position = UDim2.new(1, -56, 0, 124)
+SelectToggleBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+SelectToggleBtn.BackgroundTransparency = 0.85
+SelectToggleBtn.ZIndex = 2
+SelectToggleBtn.Text = ">"
+SelectToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+SelectToggleBtn.TextSize = 14
+SelectToggleBtn.Font = Enum.Font.GothamBold
+SelectToggleBtn.Parent = MainFrame
+local SBtnCorner = Instance.new("UICorner") SBtnCorner.CornerRadius = UDim.new(0, 14) SBtnCorner.Parent = SelectToggleBtn
+
+-- ==================== [ КНОПКА 3: ANTI-SIT ] ====================
+local AntiSitBtn = Instance.new("TextButton")
+AntiSitBtn.Size = UDim2.new(1, -40, 0, 42)
+AntiSitBtn.Position = UDim2.new(0, 20, 0, 173)
+AntiSitBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+AntiSitBtn.BackgroundTransparency = 0.85
+AntiSitBtn.ZIndex = 2
+AntiSitBtn.Text = "   Anti-Sit"
+AntiSitBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+AntiSitBtn.TextSize = 13
+AntiSitBtn.Font = Enum.Font.GothamMedium
+AntiSitBtn.TextXAlignment = Enum.TextXAlignment.Left
+AntiSitBtn.Parent = MainFrame
+
+local ASBtnCorner = Instance.new("UICorner") ASBtnCorner.CornerRadius = UDim.new(0, 14) ASBtnCorner.Parent = AntiSitBtn
+local ASBtnStroke = Instance.new("UIStroke") ASBtnStroke.Color = Color3.fromRGB(255, 255, 255) ASBtnStroke.Transparency = 0.80 ASBtnStroke.Thickness = 1 ASBtnStroke.Parent = AntiSitBtn
+
+local StatusDot3 = Instance.new("Frame")
+StatusDot3.Size = UDim2.new(0, 8, 0, 8)
+StatusDot3.Position = UDim2.new(1, -22, 0.5, -4)
+StatusDot3.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
+StatusDot3.BorderSizePixel = 0
+StatusDot3.ZIndex = 2
+StatusDot3.Parent = AntiSitBtn
+local DotCor3 = Instance.new("UICorner") DotCor3.CornerRadius = UDim.new(1, 0) DotCor3.Parent = StatusDot3
+
+-- ==================== [ ВЫПАДАЮЩИЙ СПИСОК ИГРОКОВ ] ====================
+local SelectorFrame = Instance.new("ScrollingFrame")
+SelectorFrame.Size = UDim2.new(1, -40, 0, 0)
+SelectorFrame.Position = UDim2.new(0, 20, 0, 222)
+SelectorFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 18)
+SelectorFrame.BackgroundTransparency = 0.3
+SelectorFrame.BorderSizePixel = 0
+SelectorFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+SelectorFrame.ScrollBarThickness = 3
+SelectorFrame.ZIndex = 3
+SelectorFrame.Visible = false
+SelectorFrame.Parent = MainFrame
+
+local SelCorner = Instance.new("UICorner") SelCorner.CornerRadius = UDim.new(0, 12) SelCorner.Parent = SelectorFrame
+local SelStroke = Instance.new("UIStroke") SelStroke.Color = Color3.fromRGB(255,255,255) SelStroke.Transparency = 0.85 SelStroke.Parent = SelectorFrame
+local SelLayout = Instance.new("UIListLayout") SelLayout.SortOrder = Enum.SortOrder.LayoutOrder SelLayout.Padding = UDim.new(0, 4) SelLayout.Parent = SelectorFrame
+
+-- Модальное уведомление
+local ToastNotification = Instance.new("TextLabel")
+ToastNotification.Size = UDim2.new(0, 320, 0, 34)
+ToastNotification.Position = UDim2.new(0.5, -160, 0, -50)
+ToastNotification.BackgroundColor3 = Color3.fromRGB(230, 150, 30)
+ToastNotification.BackgroundTransparency = 0.1
+ToastNotification.ZIndex = 5
+ToastNotification.Text = "Для комфортного пользования нашего скрипта мы вас ресетним!"
+ToastNotification.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToastNotification.TextSize = 10
+ToastNotification.Font = Enum.Font.GothamBold
+ToastNotification.Parent = MainFrame
+local TCorner = Instance.new("UICorner") TCorner.CornerRadius = UDim.new(0, 10) TCorner.Parent = ToastNotification
+
+local function showToast(msg, color)
+    ToastNotification.Text = msg
+    ToastNotification.BackgroundColor3 = color or Color3.fromRGB(220, 50, 50)
+    
+    TweenService:Create(ToastNotification, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+        Position = UDim2.new(0.5, -160, 0, 14)
+    }):Play()
+    task.wait(2.5)
+    TweenService:Create(ToastNotification, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+        Position = UDim2.new(0.5, -160, 0, -50)
+    }):Play()
+end
+
+-- Авто-ресет при запуске
+task.spawn(function()
+    task.wait(0.5)
+    showToast("Для комфортного пользования нашего скрипта мы вас ресетним!", Color3.fromRGB(230, 150, 30))
+    task.wait(3)
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        LocalPlayer.Character.Humanoid.Health = 0
+    end
+end)
+
+-- ==================== [ ЛОГИКА ВЫБОРА ЦЕЛИ ] ====================
+local selectedTargetPlayer = nil
+local isSelectorOpen = false
+
+SelectToggleBtn.MouseButton1Click:Connect(function()
+    isSelectorOpen = not isSelectorOpen
+    
+    for _, child in ipairs(SelectorFrame:GetChildren()) do
+        if child:IsA("TextButton") then child:Destroy() end
+    end
+    
+    if isSelectorOpen then
+        SelectToggleBtn.Text = "<"
+        SelectorFrame.Visible = true
+        
+        for _, plr in ipairs(Players:GetPlayers()) do
+            if plr ~= LocalPlayer then
+                local pBtn = Instance.new("TextButton")
+                pBtn.Size = UDim2.new(1, -6, 0, 30)
+                pBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 48)
+                pBtn.BackgroundTransparency = 0.4
+                pBtn.ZIndex = 4
+                pBtn.Text = "  " .. plr.Name
+                pBtn.TextColor3 = Color3.fromRGB(230, 230, 230)
+                pBtn.TextSize = 12
+                pBtn.Font = Enum.Font.GothamMedium
+                pBtn.TextXAlignment = Enum.TextXAlignment.Left
+                pBtn.Parent = SelectorFrame
+                
+                local pCorner = Instance.new("UICorner") pCorner.CornerRadius = UDim.new(0, 8) pCorner.Parent = pBtn
+                
+                pBtn.MouseButton1Click:Connect(function()
+                    selectedTargetPlayer = plr
+                    HeadsitBtn.Text = "   Headsit: " .. plr.Name
+                    SelectToggleBtn.MouseButton1Click:Fire()
+                end)
+            end
+        end
+        SelectorFrame.CanvasSize = UDim2.new(0, 0, 0, SelLayout.AbsoluteContentSize.Y + 8)
+        
+        TweenService:Create(MainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), { Size = UDim2.new(0, 360, 0, 390) }):Play()
+        TweenService:Create(SelectorFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), { Size = UDim2.new(1, -40, 0, 105) }):Play()
+    else
+        SelectToggleBtn.Text = ">"
+        TweenService:Create(SelectorFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.In), { Size = UDim2.new(1, -40, 0, 0) }):Play()
+        TweenService:Create(MainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), { Size = UDim2.new(0, 360, 0, 310) }):Play()
+        task.wait(0.3)
+        SelectorFrame.Visible = false
+    end
+end)
+
+-- ==================== [ ФУНКЦИИ БАРЬЕРА, HEADSIT И ANTI-SIT ] ====================
+local isBypassActive = false
+local isHeadsitActive = false
+local isAntiSitActive = false
+
+local function destroyBarrier(obj)
+    if not obj:IsA("BasePart") and not obj:IsA("Model") then return end
+    local name = string.lower(obj.Name)
+    if string.find(name, "ban") or string.find(name, "barrier") or string.find(name, "houseban") or string.find(name, "dome") or string.find(name, "shield") or string.find(name, "field") then
+        pcall(function() obj:Destroy() end)
+    end
+end
+
+local workspaceConn
+BypassBtn.MouseButton1Click:Connect(function()
+    isBypassActive = not isBypassActive
+    if isBypassActive then
+        for _, obj in ipairs(Workspace:GetDescendants()) do destroyBarrier(obj) end
+        workspaceConn = Workspace.DescendantAdded:Connect(function(child)
+            if isBypassActive then task.spawn(function() task.wait(0.05) destroyBarrier(child) end) end
+        end)
+        TweenService:Create(BypassBtn, TweenInfo.new(0.3), {BackgroundTransparency = 0.75}):Play()
+        TweenService:Create(StatusDot1, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(60, 255, 120)}):Play()
+    else
+        if workspaceConn then workspaceConn:Disconnect() end
+        TweenService:Create(BypassBtn, TweenInfo.new(0.3), {BackgroundTransparency = 0.85}):Play()
+        TweenService:Create(StatusDot1, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(255, 60, 60)}):Play()
+    end
+end)
+
+HeadsitBtn.MouseButton1Click:Connect(function()
+    if not selectedTargetPlayer or not selectedTargetPlayer.Character then
+        showToast("Сначала выберите жертву!", Color3.fromRGB(220, 50, 50))
+        return
+    end
+    
+    isHeadsitActive = not isHeadsitActive
+    
+    if isHeadsitActive then
+        TweenService:Create(HeadsitBtn, TweenInfo.new(0.3), {BackgroundTransparency = 0.75}):Play()
+        TweenService:Create(StatusDot2, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(60, 255, 120)}):Play()
+    else
+        isHeadsitActive = false
+        local myChar = LocalPlayer.Character
+        if myChar then
+            local hum = myChar:FindFirstChild("Humanoid")
+            local root = myChar:FindFirstChild("HumanoidRootPart")
+            if hum then hum.Sit = false end
+            if root then
+                root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                root.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+                root.CFrame = root.CFrame + Vector3.new(3, 2, 0)
+            end
+        end
+        TweenService:Create(HeadsitBtn, TweenInfo.new(0.3), {BackgroundTransparency = 0.85}):Play()
+        TweenService:Create(StatusDot2, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(255, 60, 60)}):Play()
+    end
+end)
+
+-- Логика Anti-Sit
+AntiSitBtn.MouseButton1Click:Connect(function()
+    isAntiSitActive = not isAntiSitActive
+    if isAntiSitActive then
+        TweenService:Create(AntiSitBtn, TweenInfo.new(0.3), {BackgroundTransparency = 0.75}):Play()
+        TweenService:Create(StatusDot3, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(60, 200, 120)}):Play()
+        showToast("Anti-Sit активирован", Color3.fromRGB(60, 200, 120))
+    else
+        TweenService:Create(AntiSitBtn, TweenInfo.new(0.3), {BackgroundTransparency = 0.85}):Play()
+        TweenService:Create(StatusDot3, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(255, 60, 60)}):Play()
+        showToast("Anti-Sit выключен", Color3.fromRGB(230, 150, 30))
+    end
+end)
+
+RunService.Heartbeat:Connect(function()
+    local myChar = LocalPlayer.Character
+    if not myChar then return end
+    local myHumanoid = myChar:FindFirstChildOfClass("Humanoid")
+    local myRoot = myChar:FindFirstChild("HumanoidRootPart")
+    
+    -- Работа Anti-Sit (постоянно сбрасываем статус посадки)
+    if isAntiSitActive and myHumanoid then
+        if myHumanoid.Sit then
+            myHumanoid.Sit = false
+        end
+        if myRoot and myHumanoid.SeatPart then
+            myHumanoid.SeatPart = nil
+        end
+    end
+    
+    -- Работа Headsit
+    if isHeadsitActive and selectedTargetPlayer and selectedTargetPlayer.Character then
+        local targetChar = selectedTargetPlayer.Character
+        local targetHead = targetChar:FindFirstChild("Head")
+        
+        if targetHead and myRoot and myHumanoid then
+            myHumanoid.Sit = true
+            myRoot.CFrame = targetHead.CFrame + Vector3.new(0, 2.2, 0)
+            myRoot.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+        end
+    end
+end)
+
+-- ==================== [ АНИМАЦИЯ МЕНЮ ] ====================
+local isMenuOpen = false
+local function toggleMenu()
+    isMenuOpen = not isMenuOpen
+    
+    if isMenuOpen then
+        -- Плавное и крутое появление снизу
+        MainFrame.Position = UDim2.new(0.5, -180, 1.4, 0)
+        TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), { 
+            Position = UDim2.new(0.5, -180, 0.5, -165) 
+        }):Play()
+        TweenService:Create(BlurEffect, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { 
+            NearIntensity = 20 
+        }):Play()
+    else
+        -- Быстрое и плавное скрытие вниз
+        TweenService:Create(MainFrame, TweenInfo.new(0.35, Enum.EasingStyle.Quart, Enum.EasingDirection.In), { 
+            Position = UDim2.new(0.5, -180, 1.4, 0) 
+        }):Play()
+        TweenService:Create(BlurEffect, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { 
+            NearIntensity = 0 
+        }):Play()
+    end
+end
+
+HomeBarBtn.MouseButton1Click:Connect(toggleMenu)
+task.wait(0.2)
+toggleMenu()
